@@ -1,0 +1,180 @@
+# .gitlab-ci.yml
+stages:
+  - build
+  - test
+  - deploy
+
+cache:
+  key: "${CI_COMMIT_REF_SLUG}"
+  paths:
+    - .gradle/caches
+    - build/
+    - src/main/webapp/grunt/node_modules/
+
+build:
+  stage: build
+  image: ${BUILD_IMAGE}
+  script: |
+    echo "Building the project without running tests..."
+    gradle clean build -x test
+  artifacts:
+    paths:
+      - build/libs/
+    expire_in: 1 week
+  tags:
+    - docker
+
+test:
+  stage: test
+  image: ${BUILD_IMAGE}
+  services:
+    - name: docker:24-dind
+      command: [ "--tls=false", "--host", "tcp://0.0.0.0:2375"]
+  variables:
+    DOCKER_TLS_CERTDIR: "" # Disables TLS for this example
+    DOCKER_HOST: "tcp://docker:2375" # Tells the client to connect to the service
+    DOCKER_DRIVER: overlay2
+  script: |
+    echo "Running unit tests..."
+    gradle test -PexcludeProviderContractTest
+  artifacts:
+    reports:
+      junit: build/test-results/test/**/TEST-*.xml
+    paths:
+      - build/reports/tests/
+      - build/pacts
+    expire_in: 1 week
+  tags:
+    - docker
+
+publish-pacts:
+  stage: test
+  image: ${BUILD_IMAGE}
+  needs:
+    - job: test
+      artifacts: true
+  script: |
+    echo "Publish pacts..."
+    pact-broker publish ${PACTS_FOLDER} --consumer-app-version=${CI_COMMIT_SHORT_SHA} --branch=${CI_COMMIT_BRANCH}
+  rules:
+    - exists:
+        - src/test/**/*ConsumerContractTest*.java
+  tags:
+    - docker
+
+verify:
+  stage: test
+  image: ${BUILD_IMAGE}
+  needs:
+    - job: test
+      artifacts: false
+  services:
+    - name: docker:24-dind
+      command: [ "--tls=false", "--host", "tcp://0.0.0.0:2375"]
+  variables:
+    DOCKER_TLS_CERTDIR: "" # Disables TLS for this example
+    DOCKER_HOST: "tcp://docker:2375" # Tells the client to connect to the service
+    DOCKER_DRIVER: overlay2
+  script: |
+    echo "Running Provider Contract Tests..."
+    gradle test -Dpact.verifier.publishResults="true" -Dpact.provider.branch=${CI_COMMIT_BRANCH} -Dpact.provider.version=${CI_COMMIT_SHORT_SHA} --tests "*ProviderContractTest*"
+  artifacts:
+    reports:
+      junit: build/test-results/test/**/TEST-*.xml
+    paths:
+      - build/reports/tests/
+    expire_in: 1 week
+  rules:
+    - exists:
+        - src/test/**/*ProviderContractTest*.java
+
+can-i-deploy:
+  stage: deploy
+  image: ${BUILD_IMAGE}
+  script: |
+    if [ -z "$PACTICIPANTS" ]; then
+      echo "Error: PACTICIPANTS environment variable is not set"
+      exit 1
+    fi
+    
+    echo "🚀 Starting processing of $PACTICIPANTS"
+    
+    IFS=',' read -ra PARTICIPANTS <<< "$PACTICIPANTS"
+    
+    for participant in "${PARTICIPANTS[@]}"; do
+      # Trim any whitespace
+      participant_clean=$(echo "$participant" | xargs)
+    
+      if ! pact-broker can-i-deploy --pacticipant=$participant_clean --version=${CI_COMMIT_SHORT_SHA} --to-environment=${DEPLOY_ENVIRONMENT} --retry-while-unknown=60; then
+        failure=true
+      fi
+      echo "---"
+    done
+    
+    if [ "$failure" = true ]; then
+      echo "⚠️ For one or more pacticipants computer said no!"
+      exit 1
+    else
+      echo "🎉 All participants processed successfully!"
+    fi
+  tags:
+    - docker
+
+deploy:
+  stage: deploy
+  image: ${BUILD_IMAGE}
+  needs:
+    - job: can-i-deploy
+      artifacts: false
+  script: |
+    echo "🚀 Starting fake deployment..."
+    echo "Application: ${CI_PROJECT_NAME}"
+    echo "Version: ${CI_COMMIT_SHORT_SHA}"
+    echo "Deploying JAR: $(ls build/libs/*.jar 2>/dev/null || echo 'No JAR found')"
+    echo "📦 Packaging completed successfully!"
+    echo "🌐 Simulating deployment to server..."
+    sleep 10
+    echo "✅ Fake deployment completed successfully!"
+    echo "📊 Deployment Summary:"
+    echo "   - Status: SUCCESS"
+    echo "   - Environment: ${DEPLOY_ENVIRONMENT}"
+    echo "   - Timestamp: $(date)"
+  tags:
+    - docker
+
+record-deployment:
+  stage: deploy
+  image: ${BUILD_IMAGE}
+  needs:
+    - job: deploy
+  script: |
+    
+    if [ -z "$PACTICIPANTS" ]; then
+      echo "Error: PACTICIPANTS environment variable is not set"
+      exit 1
+    fi
+    
+    echo "🚀 Starting processing of $PACTICIPANTS"
+    
+    IFS=',' read -ra PARTICIPANTS <<< "$PACTICIPANTS"
+    
+    for participant in "${PARTICIPANTS[@]}"; do
+      # Trim any whitespace
+      participant_clean=$(echo "$participant" | xargs)
+    
+      if ! pact-broker record-deployment --environment=${DEPLOY_ENVIRONMENT} --pacticipant=$participant_clean --version=${CI_COMMIT_SHORT_SHA}; then
+        failure=true
+      fi
+      echo "---"
+    done
+    
+    if [ "$failure" = true ]; then
+      echo "⚠️ For one or more pacticipants deployment was not recorded."
+      exit 1
+    else
+      echo "🎉 All participants processed successfully!"
+    fi
+  tags:
+    - docker
+  allow_failure: true
+

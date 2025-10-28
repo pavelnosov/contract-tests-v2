@@ -1,0 +1,16 @@
+variables:
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+  BUILD_IMAGE: gitlab:5005/contract-tests/build-and-deploy/java-node-grunt:latest
+  PACTS_FOLDER: build/pacts
+  PACT_BROKER_BASE_URL: http://pact-broker:9292/
+
+include:
+  ### Webhook
+  - local: pipelines/base/webhook/.gitlab-ci.yml
+    rules:
+      - if: '$CI_PIPELINE_SOURCE == "trigger"'
+
+  ### Branch
+  - local: pipelines/base/branch/.gitlab-ci.yml
+    rules:
+      - if: '$CI_PIPELINE_SOURCE != "trigger"'

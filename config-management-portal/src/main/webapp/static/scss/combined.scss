@@ -1,0 +1,14 @@
+@import "partials/variables.scss";
+
+@import "3rd_party/jquery.dataTables.min";
+
+@import "3rd_party/bulma/bulma";
+@import "3rd_party/bulma/bulma-divider.min";
+@import "3rd_party/bulma/bulma-tooltip.min";
+
+@import "3rd_party/fontawesome/all";
+
+@import "partials/main.scss";
+
+@import "pages/config";
+@import "pages/config_edit";

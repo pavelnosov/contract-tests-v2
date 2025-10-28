@@ -1,0 +1,136 @@
+version: '3.8'
+services:
+  postgresql:
+    image: postgres:16
+    container_name: postgresql
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: gitlab
+      POSTGRES_PASSWORD: gitlab_password
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./docker/postgresql/data:/var/lib/postgresql/data
+      - ./docker/init-multiple-databases.sql:/docker-entrypoint-initdb.d/init-multiple-databases.sql
+    networks:
+      - gitlab-network
+
+  redis:
+    image: redis:6-alpine
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./docker/redis/data:/data
+    networks:
+      - gitlab-network
+
+  gitlab:
+    image: gitlab/gitlab-ce:18.2.7-ce.0
+    container_name: gitlab
+    restart: unless-stopped 
+    depends_on:
+      - postgresql
+      - redis
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://gitlab:8000'
+        nginx['listen_port'] = 8000 
+        nginx['listen_https'] = false
+
+        postgresql['enable'] = false
+        gitlab_rails['db_adapter'] = 'postgresql'
+        gitlab_rails['db_encoding'] = 'unicode'
+        gitlab_rails['db_host'] = 'postgresql'
+        gitlab_rails['db_port'] = '5432'
+        gitlab_rails['db_username'] = 'gitlab'
+        gitlab_rails['db_password'] = 'gitlab_password'
+        gitlab_rails['db_database'] = 'gitlabhq_production'
+        
+        redis['enable'] = false
+        gitlab_rails['redis_host'] = 'redis'
+        gitlab_rails['redis_port'] = '6379'
+        
+        letsencrypt['enable'] = false
+        
+        gitlab_rails['smtp_enable'] = false
+         
+        registry['enable'] = true
+        registry_external_url 'http://gitlab:5005'
+        registry_nginx['enable'] = true
+        registry_nginx['listen_port'] = 5005
+        
+        gitlab_rails['initial_shared_runners_registration_token'] = 'GR1348941nitialToken'
+        gitlab_rails['initial_root_password'] = 'R6VVykB2DSQA/qYE7daQXiYRh8WhD7vTVS/d5VQtFrA='
+    ports:
+      - "8000:8000"       # Map host 8080 → container 80 (HTTP)
+      - "8443:443"      # Map host 8443 → container 443 (HTTPS)
+      - "2222:22"       # Map host 2222 → container 22 (SSH)
+      - "5005:5005"      
+    volumes:
+      - ./docker/gitlab/config:/etc/gitlab
+      - ./docker/gitlab/logs:/var/log/gitlab
+      - ./docker/gitlab/data:/var/opt/gitlab
+      - ./docker/gitlab/runner:/etc/gitlab-runner
+    networks:
+      - gitlab-network
+      
+  gitlab-runner:
+    image: gitlab/gitlab-runner:latest
+    container_name: gitlab-runner
+    restart: unless-stopped
+    depends_on:
+      - gitlab
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock  # Allows runner to spawn Docker containers
+      - ./docker/gitlab-runner/config:/etc/gitlab-runner  # Persist runner config
+      - ./docker/runner-entrypoint.sh:/entrypoint.sh
+    environment:
+      - CI_SERVER_URL=http://gitlab:8000  # Internal Docker network URL
+      - REGISTER_NON_INTERACTIVE=true   # Enable non-interactive registration
+      - REGISTER_LOCKED=false
+    entrypoint: ["/bin/bash", "/entrypoint.sh"]
+    networks:
+      - gitlab-network
+
+  pact-broker:
+    image: "pactfoundation/pact-broker:latest-multi"
+    container_name: pact-broker
+    restart: unless-stopped
+    ports:
+      - "9292:9292"
+    depends_on:
+      - postgresql
+    environment:
+      PACT_BROKER_PORT: '9292'
+      PACT_BROKER_DATABASE_URL: "postgres://pact_broker_user:pact_broker_password@postgresql/pact_broker"
+      PACT_BROKER_WEBHOOK_SCHEME_WHITELIST: http
+      PACT_BROKER_WEBHOOK_HOST_WHITELIST: "host.docker.internal:8000 host.docker.internal gitlab:8000 gitlab.internal:8000 webhooks:8080"
+      PACT_BROKER_LOG_LEVEL: DEBUG
+      PACT_BROKER_SQL_LOG_LEVEL: DEBUG
+      # PACT_BROKER_DATABASE_CONNECT_MAX_RETRIES is only needed for docker-compose
+      # because the database takes longer to start up than the puma process
+      # Should not be needed in production.
+      PACT_BROKER_DATABASE_CONNECT_MAX_RETRIES: "5"
+      # The list of allowed base URLs (not setting this makes the app vulnerable to cache poisoning)
+      # This list allows the app to be addressed from the host and from within another docker container correctly
+      # Ngnix config below makes the app accessible on ports 443 and 80, while the Ruby application itself runs on port 9292
+      PACT_BROKER_BASE_URL: 'https://localhost http://localhost http://localhost:9292 http://pact-broker:9292 https://host.docker.internal http://host.docker.internal http://host.docker.internal:9292'
+    networks:
+        - gitlab-network
+        
+  webhooks:
+    image: mendhak/http-https-echo
+    container_name: webhooks
+    restart: unless-stopped
+    ports:
+      - "9443:8443"
+      - "8080:8080"
+    networks:
+      - gitlab-network
+
+networks:
+  gitlab-network:
+    driver: bridge

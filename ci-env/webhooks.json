@@ -1,0 +1,47 @@
+[
+  {
+    "description": "Trigger config-service-public-notifications CI",
+    "provider": {
+      "name": "config-service-public-notifications"
+    },
+    "events": [
+      {
+        "name": "contract_requiring_verification_published"
+      }
+    ],
+    "request": {
+      "method": "POST",
+      "url": "http://host.docker.internal:8000/api/v4/projects/5/ref/${pactbroker.providerVersionBranch}/trigger/pipeline?token=glptt-ef90ae8f48766b832e309c04e1dd082546f2afef&variables[PACT_URL]=${pactbroker.pactUrl}&variables[PROVIDER_VERSION_NUMBER]=${pactbroker.providerVersionNumber}&variables[PROVIDER_VERSION_BRANCH]=${pactbroker.providerVersionBranch}&variables[CONSUMER_NAME]=${pactbroker.consumerName}&variables[PROVIDER_NAME]=${pactbroker.providerName}"
+    }
+  },
+  {
+    "description": "Trigger config-service-management-api CI",
+    "provider": {
+      "name": "config-service-management-api"
+    },
+    "events": [
+      {
+        "name": "contract_requiring_verification_published"
+      }
+    ],
+    "request": {
+      "method": "POST",
+      "url": "http://host.docker.internal:8000/api/v4/projects/5/ref/${pactbroker.providerVersionBranch}/trigger/pipeline?token=glptt-ef90ae8f48766b832e309c04e1dd082546f2afef&variables[PACT_URL]=${pactbroker.pactUrl}&variables[PROVIDER_VERSION_NUMBER]=${pactbroker.providerVersionNumber}&variables[PROVIDER_VERSION_BRANCH]=${pactbroker.providerVersionBranch}&variables[CONSUMER_NAME]=${pactbroker.consumerName}&variables[PROVIDER_NAME]=${pactbroker.providerName}"
+    }
+  },
+  {
+    "description": "Trigger config-service-public-api CI",
+    "provider": {
+      "name": "config-service-public-api"
+    },
+    "events": [
+      {
+        "name": "contract_requiring_verification_published"
+      }
+    ],
+    "request": {
+      "method": "POST",
+      "url": "http://host.docker.internal:8000/api/v4/projects/5/ref/${pactbroker.providerVersionBranch}/trigger/pipeline?token=glptt-ef90ae8f48766b832e309c04e1dd082546f2afef&variables[PACT_URL]=${pactbroker.pactUrl}&variables[PROVIDER_VERSION_NUMBER]=${pactbroker.providerVersionNumber}&variables[PROVIDER_VERSION_BRANCH]=${pactbroker.providerVersionBranch}&variables[CONSUMER_NAME]=${pactbroker.consumerName}&variables[PROVIDER_NAME]=${pactbroker.providerName}"
+    }
+  }
+]

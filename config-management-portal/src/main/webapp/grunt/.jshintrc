@@ -1,0 +1,24 @@
+{
+	"globals" : {
+		"alert": false,
+		"configModule": true
+	},
+	"node": true,
+    "browser": true,
+	"jquery": true,
+	"curly": true,
+	"immed": true,
+	"latedef": false,
+	"newcap": true,
+	"camelcase": true,
+	"eqeqeq": true,
+	"quotmark": "single",
+	"noarg": true,
+	"regexp": true,
+	"undef": true,
+	"trailing": true,
+	"unused": true,
+	"smarttabs": true,
+	"esversion":6,
+	"-W020": false
+}

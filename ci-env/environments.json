@@ -1,0 +1,14 @@
+[
+  {
+    "name": "test1",
+    "production": false
+  },
+  {
+    "name": "test2",
+    "production": false
+  },
+  {
+    "name": "test3",
+    "production": false
+  }
+]

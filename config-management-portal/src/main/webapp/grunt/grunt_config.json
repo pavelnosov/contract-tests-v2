@@ -1,0 +1,9 @@
+{
+	"project": {
+		"root": "../resources/",
+		"js": "static/js/",
+		"css": "static/scss/",
+		"img": "static/img/",
+		"webfonts": "static/webfonts/"
+	}
+}

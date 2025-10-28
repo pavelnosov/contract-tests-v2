@@ -1,0 +1,9 @@
+variables:
+  DEPLOY_ENVIRONMENT: 'test1'
+  PACTICIPANTS: 'config-service-public-notifications,config-service-management-api,config-service-public-api'
+
+include:
+  - project: 'contract-tests/build-and-deploy'
+    ref: 'main'
+    file:
+      - 'pipelines/springboot/.gitlab-ci.yml'

@@ -1,0 +1,33 @@
+
+info:
+  app:
+    name: "consumer-a"
+    version: ${SERVICE_VERSION:N/A}
+    enablecache: true
+
+spring:
+  application:
+    name: consumer-a
+  rabbitmq:
+    virtualHost: local
+    password: admin
+    username: admin
+
+configservice:
+  public:
+    client:
+      configservice:
+        url: "http://localhost:8081"
+
+server:
+  host: ${HOST_IP}
+  port: ${EXPOSED_PORT:8082}
+  error:
+    whitelabel:
+      enabled: true
+  servlet:
+    context-path: /
+  tomcat:
+    connection-timeout: 10000
+  shutdown: graceful
+  forward-headers-strategy: native

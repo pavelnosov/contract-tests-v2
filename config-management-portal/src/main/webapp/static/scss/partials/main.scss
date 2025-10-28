@@ -1,0 +1,42 @@
+html {
+	height: 100%;
+}
+
+body {
+	min-height: 100%;
+	position: relative;
+	padding-bottom: 60px;
+	color: #4c4c4c;
+	background: #fff;
+}
+
+
+a {
+	color: #4c4c4c;
+
+	&.customLink {
+		text-decoration: underline;
+	}
+}
+
+.select {
+	select[disabled] {
+		border-color: $grey-lighter;
+	}
+}
+
+.control {
+	input[disabled] {
+		border-color: $grey-lighter;
+	}
+}
+
+.card {
+	.card-content {
+		.field.has-addons {
+			p {
+				margin-bottom: 0;
+			}
+		}
+	}
+}

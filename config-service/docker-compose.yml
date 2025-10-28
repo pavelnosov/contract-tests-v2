@@ -1,0 +1,29 @@
+version: "3"
+
+services:
+
+  postgres:
+    image: postgres:13.16-alpine
+    ports:
+      - "5532:5432"
+#    volumes:
+#      - ./local/postgres-init-db-scripts:/docker-entrypoint-initdb.d
+    environment:
+      - POSTGRES_DB=config-service
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    logging:
+      driver: json-file
+    command: "-c fsync=off"
+
+  rabbit:
+    image: rabbitmq:3.13-management-alpine
+    environment:
+      - RABBITMQ_DEFAULT_VHOST=local
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin
+    volumes:
+      - ./local/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
+    ports:
+      - "15672:15672"
+      - "5672:5672"

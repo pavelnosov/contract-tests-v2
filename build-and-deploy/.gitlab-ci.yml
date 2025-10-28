@@ -1,0 +1,28 @@
+# .gitlab-ci.yml
+stages:
+  - build
+
+# Stage to build our custom image
+build_custom_image:
+  stage: build
+  image: docker:24
+  services:
+    - name: docker:24-dind
+      command: ["--tls=false", "--host", "tcp://0.0.0.0:2375", "--insecure-registry", "gitlab:5005"]
+  variables:
+    DOCKER_TLS_CERTDIR: "" # Disables TLS for this example
+    DOCKER_HOST: "tcp://docker:2375" # Tells the client to connect to the service
+  before_script: |
+    echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
+  script: |
+    echo "Building custom docker image..."
+    docker build -t $CI_REGISTRY_IMAGE/java-node-grunt:latest .
+    docker push $CI_REGISTRY_IMAGE/java-node-grunt:latest
+    echo "Custom image built successfully!"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      changes:
+        - Dockerfile
+      when: always
+  tags:
+    - docker

@@ -1,0 +1,69 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.3.4'
+    id 'io.spring.dependency-management' version '1.1.6'
+}
+
+group = 'by.pano'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.apache.commons:commons-lang3'
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'io.projectreactor:reactor-test'
+    testImplementation 'au.com.dius.pact.consumer:junit5:4.6.14'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    OperatingSystem os = org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.currentOperatingSystem;
+    if (os.isMacOsX()) {
+        implementation('io.netty:netty-resolver-dns-native-macos:4.1.113.Final:osx-aarch_64')
+    }
+}
+
+build.dependsOn 'grunt'
+
+tasks.register('grunt') {
+    exec {
+        workingDir 'src/main/webapp/grunt'
+        commandLine 'npm', 'install'
+    }
+    exec {
+        workingDir 'src/main/webapp/grunt'
+        commandLine 'grunt', 'build'
+    }
+}
+
+tasks.named('test') {
+    System.setProperty("pact_do_not_track", "true");
+
+    if (project.hasProperty('excludeProviderContractTest')) {
+        exclude '**/*ProviderContractTest*'
+    }
+
+    systemProperties['pact.provider.version'] = System.getProperty('pact.provider.version')
+    systemProperties['pact.provider.branch'] = System.getProperty('pact.provider.branch')
+    systemProperties['pact.verifier.publishResults'] = System.getProperty('pact.verifier.publishResults')
+
+    useJUnitPlatform()
+}

@@ -1,0 +1,29 @@
+services:
+  postgres:
+    enabled: true
+
+server:
+  host: localhost
+  port: 8081
+
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5532/config
+    username: postgres
+    password: postgres
+  flyway:
+    enabled: true
+    locations: filesystem:./src/main/resources/db/migration
+    url: jdbc:postgresql://localhost:5532/config
+    user: postgres
+    password: postgres
+
+logging:
+  config: classpath:logback-console.xml
+
+info:
+  app:
+    name: "config-service"
+    version: local-snapshot
+

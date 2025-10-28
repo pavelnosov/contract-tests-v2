@@ -1,0 +1,54 @@
+# .gitlab-ci.yml
+stages:
+  - test
+
+cache:
+  key: "${CI_COMMIT_REF_SLUG}"
+  paths:
+    - .gradle/caches
+    - build/
+    - src/main/webapp/grunt/node_modules/
+
+new-contract-verification:
+  stage: test
+  image: ${BUILD_IMAGE}
+  services:
+    - name: docker:24-dind
+      command: [ "--tls=false", "--host", "tcp://0.0.0.0:2375" ]
+  variables:
+    DOCKER_TLS_CERTDIR: "" # Disables TLS for this example
+    DOCKER_HOST: "tcp://docker:2375" # Tells the client to connect to the service
+    DOCKER_DRIVER: overlay2
+#    GIT_DEPTH: 0
+#    GIT_STRATEGY: clone
+  script: |
+    echo "🚀 Starting pacts verification..."
+    echo "Application: ${CI_PROJECT_NAME}"
+    echo "Version: ${CI_COMMIT_SHORT_SHA}"
+    echo "Branch: ${CI_COMMIT_BRANCH}"
+    echo "PACT_URL: ${PACT_URL}"
+    echo "PROVIDER_VERSION_NUMBER: ${PROVIDER_VERSION_NUMBER}"
+    echo "PROVIDER_VERSION_BRANCH: ${PROVIDER_VERSION_BRANCH}"
+    echo "PROVIDER_NAME: ${PROVIDER_NAME}"
+    echo "CONSUMER_NAME: ${CONSUMER_NAME}"
+    
+    git checkout $PROVIDER_VERSION_NUMBER
+    
+     # Find the test class with the specific @Provider annotation
+    TEST_CLASS=$(grep -r "@Provider(\"${PROVIDER_NAME}\")" src/test/java --include="*.java" | head -1 | sed 's/.*\/\([^\/]*\)\.java:.*/\1/')
+    echo "Found test class: $TEST_CLASS"
+    
+    gradle test -Dpact.verifier.publishResults="true" -Dpact.provider.branch=${PROVIDER_VERSION_BRANCH} -Dpact.provider.version=${PROVIDER_VERSION_NUMBER} -Dpact.filter.pacturl=${PACT_URL}  -Dpact.filter.consumers=${CONSUMER_NAME} --tests "*${TEST_CLASS}*"
+    echo "✅ Verification completed successfully!"
+  artifacts:
+    reports:
+      junit: build/test-results/test/**/TEST-*.xml
+    paths:
+      - build/reports/tests/
+    expire_in: 1 week
+  rules:
+    # This job executes only for pipelines triggered via the API
+    - if: $CI_PIPELINE_SOURCE == "trigger"
+  tags:
+    - docker
+

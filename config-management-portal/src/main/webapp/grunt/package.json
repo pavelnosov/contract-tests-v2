@@ -1,0 +1,26 @@
+{
+  "name": "config-management-portal",
+  "version": "0.1.0",
+  "description": "Config Management Portal",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "BSD",
+  "devDependencies": {
+    "dart-sass": "1.25.0",
+    "grunt": "1.6.1",
+    "grunt-contrib-clean": "2.0.1",
+    "grunt-contrib-concat": "2.1.0",
+    "grunt-contrib-copy": "1.0.0",
+    "grunt-contrib-jshint": "3.2.0",
+    "grunt-contrib-watch": "1.1.0",
+    "grunt-sass": "3.1.0",
+    "grunt-sftp-deploy": "0.2.5"
+  },
+  "dependencies": {
+    "jquery": "^3.6.0",
+    "datatables.net-dt": "^1.12.1"
+  }
+}

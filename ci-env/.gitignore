@@ -1,0 +1,7 @@
+### VS Code ###
+.vscode/
+/docker/gitlab
+/docker/gitlab-runner
+/docker/postgresql
+/docker/redis
+.DS_Store

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8"/>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+	<title>New ParshipMeet Group Pace Tool</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+	<script defer th:src="@{/js/pace_combined.js}"></script>
+	<link rel="stylesheet" th:href="@{/css/pace_combined.css}"/>
+	<link rel="shortcut icon" th:href="@{/img/favicon.ico}">
+</head>
+<body>
+
+<nav th:fragment="navbar" class="navbar is-light mb-2" role="navigation" aria-label="main navigation">
+	<div id="paceHeader" class="navbar-menu">
+		<div class="navbar-end">
+			<div class="navbar-item">
+				<div class="buttons">
+					<a class="button is-success" href="/config/add">
+						<span class="icon">
+							<i class="fas fa-plus"></i>
+						</span>
+						<span>New Config</span>
+					</a>
+				</div>
+			</div>
+		</div>
+	</div>
+</nav>
+</body>
+</html>

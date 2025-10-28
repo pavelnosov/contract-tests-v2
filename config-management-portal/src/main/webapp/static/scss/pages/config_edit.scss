@@ -1,0 +1,16 @@
+body#configEditPage {
+
+	@include touch {
+		.container {
+			margin: 1rem;
+		}
+	}
+
+	#segmentColumn {
+		min-width: 800px;
+	}
+
+	.help {
+		white-space: pre-line;
+	}
+}

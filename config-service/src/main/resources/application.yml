@@ -1,0 +1,51 @@
+spring:
+  application:
+    name: config-service
+  flyway:
+    url: ${spring.datasource.url}
+    user: ${spring.datasource.username}
+    password: ${spring.datasource.password}
+    table: schema_version
+    enabled: true
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost:5532}/config-service
+    username: ${POSTGRES_PORTAL_USERNAME:postgres}
+    password: ${POSTGRES_PORTAL_PASSWORD:postgres}
+    hikari:
+      maxPoolSize: ${DB_CONNECTION_MAX_POOL_SIZE:10}
+      minimum-idle: ${DB_CONNECTION_MINIMUM_IDLE:5}
+      idleTimeout: ${DB_CONNECTION_IDLE_TIMEOUT:600000}
+      connection-timeout: 2000
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  rabbitmq:
+    virtualHost: local
+    password: admin
+    username: admin
+
+info:
+  app:
+    name: "config-service"
+    version: ${SERVICE_VERSION:N/A}
+    enablecache: true
+
+server:
+  host: ${HOST_IP}
+  port: ${EXPOSED_PORT:8081}
+  error:
+    whitelabel:
+      enabled: true
+  servlet:
+    context-path: /
+  tomcat:
+    connection-timeout: 10000
+  shutdown: graceful
+  forward-headers-strategy: native
+
+services:
+  postgres:
+    enabled: ${POSTGRES_ENABLED:false}
+

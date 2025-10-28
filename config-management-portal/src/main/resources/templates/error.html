@@ -1,0 +1,15 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml11-thymeleaf-4.dtd">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" th:with="title='Error'">
+<head th:replace="~{header.html :: head}">
+</head>
+<body id="helloWorld">
+	<div class="container">
+		<div class="card text-white bg-danger my-4 mx-auto" style="max-width: 18rem;">
+			<div class="card-header">Error</div>
+			<div class="card-body">
+				<p class="card-text" th:text="${error != null ? error : 'You are not allowed to see this page.'}"></p>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
